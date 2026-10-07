@@ -33,9 +33,12 @@
     display:flex;flex-direction:column;align-items:center;
   }
   .app{
-    width:min(920px,100%);height:100dvh;display:flex;flex-direction:column;
+    width:min(1200px,100%);height:100dvh;display:grid;
+    grid-template-columns:minmax(340px,480px) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);
     padding:16px;gap:14px;
   }
+  header{grid-column:1/-1}
+  .talk{display:flex;flex-direction:column;gap:14px;min-height:0}
 
   /* ---------- header ---------- */
   header{
@@ -173,31 +176,114 @@
     .titles p{display:none}
     .msg{max-width:95%}
   }
+
+  /* ---------- the stage: a video call with JARVIS ---------- */
+  .stage{
+    position:relative;min-height:0;display:flex;flex-direction:column;gap:10px;
+  }
+  .screen{
+    position:relative;flex:1;min-height:0;border-radius:22px;overflow:hidden;
+    background:#0a1019;border:1px solid var(--border-strong);
+    box-shadow:0 30px 70px -30px rgba(0,0,0,.9),0 0 0 1px rgba(56,189,248,.05) inset;
+    display:grid;place-items:center;
+  }
+  .face-host{position:relative;height:100%;aspect-ratio:1;max-width:100%;max-height:100%}
+  .face-host canvas{border-radius:0}
+  .screen::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(120% 90% at 50% 40%,transparent 55%,rgba(4,8,14,.55));}
+  .plate{
+    position:absolute;inset-inline-start:14px;top:14px;z-index:3;display:flex;align-items:center;gap:10px;
+    background:rgba(8,13,22,.62);backdrop-filter:blur(10px);border:1px solid var(--border);
+    border-radius:999px;padding:6px 14px 6px 12px;font-size:13px;
+  }
+  .plate b{letter-spacing:.12em;font-size:12.5px}
+  .plate .state{color:var(--muted);font-size:12px}
+  .plate .live{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+  .stage[data-state=listening] .live{background:var(--ok);box-shadow:0 0 10px var(--ok);animation:pulse 1.2s infinite}
+  .stage[data-state=thinking] .live{background:var(--accent-2);box-shadow:0 0 10px var(--accent-2);animation:pulse .8s infinite}
+  .stage[data-state=speaking] .live{background:var(--accent);box-shadow:0 0 12px var(--accent)}
+  .captions{
+    position:absolute;inset-inline:0;bottom:0;z-index:3;padding:46px 18px 16px;text-align:center;
+    background:linear-gradient(to top,rgba(4,8,14,.88),rgba(4,8,14,.55) 55%,transparent);
+    font-size:15.5px;line-height:1.55;min-height:96px;pointer-events:none;
+    text-shadow:0 1px 8px rgba(0,0,0,.9);
+  }
+  .captions.hidden{display:none}
+  .captions .you{color:#9fd6ff;font-size:13px;display:block;margin-bottom:4px}
+  .start{
+    position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:10px;
+    padding:20px 20px 28px;background:linear-gradient(to top,rgba(4,8,14,.92),rgba(4,8,14,.2) 55%,transparent);
+    text-align:center;
+  }
+  .start h2{margin:0;font-size:20px;font-weight:650}
+  .start p{margin:0;color:var(--muted);font-size:13px;max-width:34ch}
+  .start .row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+  .start[hidden]{display:none}
+  .big{
+    border:none;border-radius:999px;padding:12px 22px;font:600 14.5px var(--font);cursor:pointer;
+    background:linear-gradient(135deg,#0ea5e9,#38bdf8);color:#04121d;
+  }
+  .big.ghost{background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--border-strong)}
+  .controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .ctl{
+    display:flex;align-items:center;gap:7px;border-radius:999px;padding:9px 15px;cursor:pointer;
+    background:var(--panel);border:1px solid var(--border);color:var(--text);font:500 13px var(--font);transition:.15s;
+  }
+  .ctl:hover{border-color:var(--border-strong)}
+  .ctl[aria-pressed=true]{background:rgba(56,189,248,.16);border-color:var(--accent)}
+  .ctl.rec[aria-pressed=true]{background:rgba(255,107,107,.18);border-color:var(--danger)}
+  .ctl[hidden]{display:none}
+  .mark{width:36px;height:36px;border-radius:11px;flex:none;display:grid;place-items:center;font-weight:800;font-size:18px;
+    background:linear-gradient(135deg,#0ea5e9,#38bdf8);color:#04121d;letter-spacing:0}
+  @media(max-width:860px){
+    .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(220px,40dvh) minmax(0,1fr);gap:10px}
+    .controls .ctl span{display:none}
+    .controls .ctl{padding:9px 13px}
+    .captions{font-size:14px;padding-top:30px;min-height:64px}
+    .plate{inset-inline-start:10px;top:10px}
+  }
+  @media(prefers-reduced-motion:reduce){.pulse,.stage .live{animation:none!important}}
+  .stage:fullscreen,.stage.full{position:fixed;inset:0;z-index:100;background:#05080e;padding:12px}
+  .stage.full{display:flex}
 </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <div class="reactor" title="JARVIS">
-      <svg viewBox="0 0 100 100" fill="none">
-        <circle cx="50" cy="50" r="46" stroke="#1e3550" stroke-width="3"/>
-        <g class="spin">
-          <circle cx="50" cy="50" r="38" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6 10" opacity=".8"/>
-        </g>
-        <circle cx="50" cy="50" r="26" stroke="#38bdf8" stroke-width="2" opacity=".5"/>
-        <circle class="pulse" cx="50" cy="50" r="15" fill="#38bdf8"/>
-        <circle cx="50" cy="50" r="15" stroke="#bfeaff" stroke-width="1.5"/>
-      </svg>
-    </div>
+    <div class="mark" aria-hidden="true">J</div>
     <div class="titles">
       <h1>JARVIS</h1>
-      <p>העוזר האישי החכם שלך — זמין 24/7</p>
+      <p>עוזר אישי: מדברים איתו, והוא עונה בקול ובהבעות</p>
     </div>
     <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">בודק חיבור…</span></div>
     <button class="icon-btn" id="newChatBtn" title="שיחה חדשה">⟳</button>
     <button class="icon-btn" id="settingsBtn" title="הגדרות">⚙</button>
   </header>
 
+  <section class="stage" id="stage" data-state="idle" aria-label="שיחה עם JARVIS">
+    <div class="screen">
+      <div class="face-host" id="faceHost"></div>
+      <div class="plate"><span class="live"></span><b>JARVIS</b><span class="state" id="stateText">מוכן</span></div>
+      <div class="captions" id="captions" aria-live="polite"></div>
+      <div class="start" id="start">
+        <h2>שלום, אני JARVIS</h2>
+        <p>אפשר לדבר איתי בקול או להקליד. אני עונה בקול, עם הבעות.</p>
+        <div class="row">
+          <button class="big" id="startVoice">🎙 התחילו שיחה קולית</button>
+          <button class="big ghost" id="startText">⌨ להקליד</button>
+        </div>
+      </div>
+    </div>
+    <div class="controls" role="toolbar" aria-label="בקרות שיחה">
+      <button class="ctl rec" id="micBtn" aria-pressed="false" title="דיבור אליי (לחיצה להפעלה וכיבוי)">🎙 <span>דיבור</span></button>
+      <button class="ctl" id="callBtn" aria-pressed="false" title="שיחה רציפה: אני מקשיב ועונה בלי לחיצות">📞 <span>שיחה רציפה</span></button>
+      <button class="ctl" id="muteBtn" aria-pressed="true" title="קול">🔊 <span>קול</span></button>
+      <button class="ctl" id="ccBtn" aria-pressed="true" title="כתוביות">💬 <span>כתוביות</span></button>
+      <button class="ctl" id="fsBtn" title="מסך מלא">⛶ <span>מסך מלא</span></button>
+    </div>
+  </section>
+
+  <div class="talk">
   <div class="chat" id="chat"></div>
 
   <div class="composer">
@@ -212,6 +298,7 @@
       <textarea id="input" rows="1" placeholder="כתוב את השאלה שלך…"></textarea>
       <button class="send" id="sendBtn" title="שליחה">➤</button>
     </div>
+  </div>
   </div>
 </div>
 
@@ -243,6 +330,7 @@
   </div>
 </div>
 
+<script src="face.js"></script>
 <script>
 (function(){
   "use strict";
@@ -326,7 +414,7 @@
     const blocks = [];
     src = src.replace(/```(\w*)\n?([\s\S]*?)```/g,(m,lang,code)=>{
       blocks.push(`<pre><code>${esc(code.replace(/\n$/,""))}</code></pre>`);
-      return ` ${blocks.length-1} `;
+      return `\u0000${blocks.length-1}\u0000`;
     });
     src = esc(src);
     src = src.replace(/`([^`]+)`/g,"<code>$1</code>");
@@ -341,8 +429,8 @@
     for(let line of lines){
       const raw = line.trim();
       if(raw === ""){ closeList(); continue; }
-      const restore = raw.replace(/ (\d+) /g,(m,i)=>blocks[+i]);
-      if(/^ \d+ $/.test(raw)){ closeList(); html += restore; continue; }
+      const restore = raw.replace(/\u0000(\d+)\u0000/g,(m,i)=>blocks[+i]);
+      if(/^\u0000\d+\u0000$/.test(raw)){ closeList(); html += restore; continue; }
       let m;
       if(m = raw.match(/^(#{1,3})\s+(.*)$/)){ closeList(); const n = m[1].length; html += `<h${n}>${m[2]}</h${n}>`; continue; }
       if(m = raw.match(/^[-*]\s+(.*)$/)){ if(listType !== "ul"){ closeList(); html += "<ul>"; listType = "ul"; } html += `<li>${m[1]}</li>`; continue; }
@@ -406,6 +494,7 @@
     addUser(text);
     inputEl.value = ""; autoGrow();
     showTyping();
+    unlisten(); stopTalk(); setState("thinking");
 
     try{
       const res = await fetch(webhookUrl(), {
@@ -418,6 +507,7 @@
         let detail = "";
         try{ detail = (await res.text()).slice(0,300); }catch(e){}
         addBot(httpErrorHint(res.status, detail), false);
+        failFace("לא הצלחתי לקבל תשובה. אפשר לנסות שוב בעוד רגע.");
         setStatus(res.status === 404 ? "bad" : "ok", res.status === 404 ? "Webhook לא רשום" : "מחובר");
       }else{
         const ct = res.headers.get("content-type") || "";
@@ -425,10 +515,12 @@
         const reply = extractReply(data).trim() || "_(לא התקבל טקסט תשובה מהוורקפלואו)_";
         addBot(reply);
         setStatus("ok","מחובר");
+        voiceReply(reply);
       }
     }catch(err){
       hideTyping();
       addBot(networkErrorHint(err), false);
+      failFace("אני לא מצליח להתחבר כרגע. בדקו את ההגדרות או נסו שוב.");
       setStatus("bad","אין חיבור");
     }finally{
       busy = false; sendBtn.disabled = false; inputEl.focus();
@@ -526,6 +618,270 @@
       rEl.className = "test-result bad";
     }
   });
+
+
+  /* ---------- the face, the voice, the ears ---------- */
+  const stage = $("#stage"), captions = $("#captions"), stateText = $("#stateText");
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let face = null;
+  try{
+    face = new TalkingFace($("#faceHost"), { image: "face.jpg", mesh: "face-mesh.json" });
+    face.ready.then(()=>face.mood("calm")).catch(()=>{ face = null; });
+  }catch(e){ face = null; }
+
+  const STATE_TEXT = { idle:"מוכן", listening:"מקשיב…", thinking:"חושב…", speaking:"מדבר" };
+  let state = "idle";
+  function setState(s){
+    state = s; stage.dataset.state = s; stateText.textContent = STATE_TEXT[s] || "";
+    if(!face) return;
+    face.speaking = (s === "speaking");
+    face.mood(s === "listening" ? "listen" : s === "thinking" ? "think" : "calm");
+    if(s !== "speaking") face.stopSpeaking();
+  }
+
+  const MALE = /asaf|avri|\bmale\b|\bman\b|גבר/i;
+  const hasTTS = "speechSynthesis" in window;
+  let voice = null, natural = false, soundOn = true, ccOn = true, callOn = false, micOn = false, started = false;
+  function pickVoice(){
+    if(!hasTTS) return;
+    const he = speechSynthesis.getVoices().filter(v=>/^he|^iw/i.test(v.lang) && !MALE.test(v.name));
+    const rank = [
+      v=>/hila/i.test(v.name) && /natural|online|neural/i.test(v.name),
+      v=>/natural|online|neural/i.test(v.name),
+      v=>/hila|carmit|female|woman|אישה|נשי/i.test(v.name),
+      ()=>true
+    ];
+    voice = null;
+    for(const r of rank){ voice = he.find(r) || null; if(voice) break; }
+    natural = !!voice && /natural|online|neural/i.test(voice.name);
+  }
+  if(hasTTS){ pickVoice(); speechSynthesis.addEventListener("voiceschanged", pickVoice); }
+  function voiceUrl(){ return (cfg.base || DEFAULTS.base).replace(/\/+$/,"") + "/webhook/hasadna-voice"; }
+  let cloudOK = true;
+
+  // one shared audio graph: a clip from the server goes through an analyser, and the mouth follows the sound
+  let actx = null, analyser = null, freq = null, curSrc = null;
+  function audio(){
+    if(!actx){
+      const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return null;
+      actx = new AC(); analyser = actx.createAnalyser(); analyser.fftSize = 1024; analyser.smoothingTimeConstant = .55;
+      freq = new Uint8Array(analyser.frequencyBinCount); analyser.connect(actx.destination);
+    }
+    if(actx.state === "suspended") actx.resume().catch(()=>{});
+    return actx;
+  }
+
+  // the text as it should be spoken: no markup, no code, no addresses
+  function speakable(md){
+    return md.replace(/```[\s\S]*?```/g," קטע קוד. ").replace(/`[^`]*`/g,"").replace(/!?\[([^\]]*)\]\([^)]*\)/g,"$1")
+      .replace(/https?:\/\/\S+/g,"קישור").replace(/[*_#>~]+/g,"").replace(/^\s*[-•]\s+/gm,"").replace(/\p{Extended_Pictographic}/gu,"")
+      .replace(/\s*\n+\s*/g,". ").replace(/\.\s*\./g,".").replace(/\s{2,}/g," ").trim();
+  }
+  function sentences(t){
+    const out = (t.match(/[^.!?…]+[.!?…]*/g) || [t]).map(x=>x.trim()).filter(Boolean), res = [];
+    let cur = "";
+    for(const x of out){ if((cur + " " + x).length > 220 && cur){ res.push(cur); cur = x; } else cur = (cur ? cur + " " : "") + x; }
+    if(cur) res.push(cur);
+    return res;
+  }
+  // how the face feels about a sentence
+  function feel(t){
+    if(/[?]\s*$/.test(t)) return "curious";
+    if(/מצטער|סליחה|לצערי|שגיאה|לא הצלחתי|בעיה|לא נמצא|לא ניתן/.test(t)) return "concerned";
+    if(/שלום|היי|בוקר טוב|ערב טוב|תודה|בשמחה|מעולה|נהדר|יופי|בהצלחה|שמח|!\s*$/.test(t)) return "happy";
+    return "calm";
+  }
+  // a rough mouth shape from the letters of a word: o/u round, i/e wide, a open, b/m/p closed
+  function shapeOf(ch){
+    if(/[ו]/.test(ch)) return [0, 1, .55];
+    if(/[י]/.test(ch)) return [.9, 0, .4];
+    if(/[אהע]/.test(ch)) return [.1, 0, .85];
+    if(/[במפ]/.test(ch)) return [0, .5, .05];
+    if(/[שסזצקרכחט]/.test(ch)) return [.5, 0, .35];
+    return [.25, .1, .5];
+  }
+
+  let talkId = 0, rafMouth = 0, endCurrent = null;
+  function stopTalk(){
+    talkId++; cancelAnimationFrame(rafMouth);
+    if(hasTTS) try{ speechSynthesis.cancel(); }catch(e){}
+    if(curSrc){ try{ curSrc.onended = null; curSrc.stop(); }catch(e){} curSrc = null; }
+    if(endCurrent){ const f = endCurrent; endCurrent = null; f(true); }
+    if(face) face.stopSpeaking();
+  }
+
+  function fetchClip(text){
+    const ctl = window.AbortController ? new AbortController() : null;
+    const t = setTimeout(()=>ctl && ctl.abort(), 9000);
+    return fetch(voiceUrl(), { method:"POST", body:new URLSearchParams({ text }), signal: ctl ? ctl.signal : undefined })
+      .then(r=>r.json()).then(j=>{
+        clearTimeout(t);
+        if(!j.ok){ if(j.error === "no-voice") cloudOK = false; return null; }
+        const bin = atob(j.audio), a = new Uint8Array(bin.length);
+        for(let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+        return a.buffer;
+      }).catch(()=>{ clearTimeout(t); return null; });
+  }
+
+  // speak one sentence: resolves when it is over (or was interrupted)
+  function sayChunk(text, id, capEl){
+    return new Promise(resolve=>{
+      let done = false;
+      const finish = (cut)=>{ if(done) return; done = true; endCurrent = null; cancelAnimationFrame(rafMouth); if(face){ face.stopSpeaking(); if(!cut) face.nodOnce(.7); } resolve(); };
+      endCurrent = finish;
+      const mood = feel(text); if(face) face.mood(mood);
+      const reveal = (n)=>{ if(capEl) capEl.textContent = text.slice(0, Math.max(n, 0)) + ""; };
+      if(!soundOn || id !== talkId){ reveal(text.length); setTimeout(()=>finish(), 400 + text.length * 28); return; }
+      const useCloud = cloudOK && !natural;
+      const viaBrowser = ()=>{
+        if(!(hasTTS && voice)){ reveal(text.length); setTimeout(()=>finish(), 700 + text.length * 50); return; }   // no voice: words only, the face does not fake talking
+        const u = new SpeechSynthesisUtterance(text);
+        u.voice = voice; u.lang = voice.lang; u.rate = natural ? 1 : .98; u.pitch = natural ? 1 : 1.08;
+        const t0 = performance.now(); let word = null;
+        u.onboundary = e=>{
+          reveal(e.charIndex + (e.charLength || 4));
+          const w = (text.slice(e.charIndex).match(/^[^\s,.!?;:]+/) || [""])[0];
+          word = { at: performance.now(), len: w.length, w, dur: Math.max(140, w.length * 78) };
+          if(face && w.length > 5 && Math.random() < .3) face.browKick = .55;
+        };
+        u.onend = ()=>finish(); u.onerror = ()=>finish();
+        speechSynthesis.speak(u);
+        setTimeout(()=>finish(), 3000 + text.length * 130);
+        const tick = ()=>{
+          if(done || id !== talkId) return;
+          const now = performance.now();
+          let lvl = 0, wide = 0, round = 0;
+          if(word){
+            const u1 = (now - word.at) / word.dur;
+            if(u1 < 1.15){
+              const syl = Math.max(1, Math.round(word.len / 2.2));
+              const env = Math.abs(Math.sin(u1 * Math.PI * syl)) * (u1 < 1 ? 1 : 1 - (u1 - 1) / .15);
+              const ch = word.w[Math.min(word.w.length - 1, Math.floor(u1 * word.w.length))] || "א";
+              const sh = shapeOf(ch);
+              lvl = env * (.35 + sh[2] * .6); wide = sh[0]; round = sh[1];
+              if(/[במפ]/.test(ch) && env < .35) lvl = 0;
+            }
+          }else{
+            const env = (Math.sin((now - t0) / 1000 * 17) * .5 + .5) * (Math.sin((now - t0) / 1000 * 3.1) * .3 + .7);
+            lvl = env * .7; wide = .2; round = .2;
+          }
+          if(face) face.speak(lvl, wide, round);
+          rafMouth = requestAnimationFrame(tick);
+        };
+        tick();
+      };
+      if(!useCloud){ viaBrowser(); return; }
+      fetchClip(text).then(buf=>{
+        if(done || id !== talkId) return;
+        const ctx = audio();
+        if(!buf || !ctx){ viaBrowser(); return; }
+        const dec = ctx.decodeAudioData(buf.slice(0));
+        Promise.resolve(dec).then(ab=>{
+          if(done || id !== talkId) return;
+          const src = ctx.createBufferSource(); src.buffer = ab; src.connect(analyser); curSrc = src;
+          const t0 = ctx.currentTime;
+          src.onended = ()=>{ reveal(text.length); finish(); };
+          src.start();
+          const tick = ()=>{
+            if(done || id !== talkId) return;
+            analyser.getByteFrequencyData(freq);
+            const bw = ctx.sampleRate / analyser.fftSize;
+            let lo = 0, mid = 0, hi = 0, tot = 0;
+            for(let i = 2; i < freq.length; i++){
+              const f = i * bw, v = freq[i] / 255;
+              if(f < 900) lo += v; else if(f < 2800) mid += v; else if(f < 6000) hi += v;
+              tot += (f < 6000 ? v : 0);
+            }
+            const lvl = clamp01((lo * 1.2 + mid) / 38);
+            const ratio = (hi + mid * .5) / (lo + mid + hi + 1e-3);
+            const wide = clamp01((ratio - .3) * 3), round = clamp01((.3 - ratio) * 3.5) * lvl;
+            if(face) face.speak(lvl, wide, round);
+            const prog = (ctx.currentTime - t0) / ab.duration;
+            reveal(Math.floor(text.length * Math.min(1, prog * 1.08)));
+            if(lvl > .55 && Math.random() < .03) face && (face.browKick = .45);
+            rafMouth = requestAnimationFrame(tick);
+          };
+          tick();
+        }).catch(()=>viaBrowser());
+      });
+    });
+  }
+  const clamp01 = x=>Math.max(0, Math.min(1, x));
+
+  // JARVIS says a whole reply, sentence by sentence, with the face following
+  async function voiceReply(md){
+    stopTalk();
+    const id = talkId;
+    const text = speakable(md);
+    if(!text){ setState("idle"); return; }
+    setState("speaking");
+    captions.innerHTML = "";
+    for(const sentence of sentences(text)){
+      if(id !== talkId) return;
+      const line = document.createElement("div"); captions.innerHTML = ""; captions.appendChild(line);
+      await sayChunk(sentence, id, line);
+    }
+    if(id !== talkId) return;
+    setState("idle");
+    if(callOn) listen();
+  }
+
+  /* ---------- the ears ---------- */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let rec = null, heard = "";
+  function listen(){
+    if(!SR || busy) return;
+    stopTalk(); try{ rec && rec.abort(); }catch(e){}
+    rec = new SR(); rec.lang = "he-IL"; rec.interimResults = true; rec.continuous = false; rec.maxAlternatives = 1;
+    heard = ""; micOn = true; syncButtons(); setState("listening");
+    rec.onresult = e=>{
+      let txt = "", fin = false;
+      for(let i = e.resultIndex; i < e.results.length; i++){ txt += e.results[i][0].transcript; if(e.results[i].isFinal) fin = true; }
+      heard = txt;
+      captions.innerHTML = '<span class="you">אני שומע:</span>' + esc(txt);
+      if(face && txt.length % 7 === 0) face.nodOnce(.35);
+      if(fin){ const t = txt.trim(); try{ rec.stop(); }catch(e){} if(t) askByVoice(t); }
+    };
+    rec.onerror = e=>{ micOn = false; syncButtons(); if(state === "listening") setState("idle");
+      if(e.error === "not-allowed" || e.error === "service-not-allowed"){ callOn = false; syncButtons(); captions.textContent = "אין לי הרשאה למיקרופון. אפשר לאשר אותה בדפדפן, או להקליד."; } };
+    rec.onend = ()=>{ micOn = false; syncButtons();
+      if(state === "listening"){ setState("idle"); if(callOn && !busy) setTimeout(listen, 350); } };
+    try{ rec.start(); }catch(e){ micOn = false; syncButtons(); }
+  }
+  function unlisten(){ try{ rec && rec.abort(); }catch(e){} micOn = false; if(state === "listening") setState("idle"); syncButtons(); }
+  function askByVoice(t){ captions.innerHTML = '<span class="you">אמרת:</span>' + esc(t); send(t); }
+
+  /* ---------- controls ---------- */
+  const micBtn = $("#micBtn"), callBtn = $("#callBtn"), muteBtn = $("#muteBtn"), ccBtn = $("#ccBtn"), fsBtn = $("#fsBtn");
+  function syncButtons(){
+    micBtn.setAttribute("aria-pressed", String(micOn)); callBtn.setAttribute("aria-pressed", String(callOn));
+    muteBtn.setAttribute("aria-pressed", String(soundOn)); muteBtn.firstChild.textContent = soundOn ? "🔊 " : "🔇 ";
+    ccBtn.setAttribute("aria-pressed", String(ccOn)); captions.classList.toggle("hidden", !ccOn);
+  }
+  if(!SR){ micBtn.hidden = true; callBtn.hidden = true; }
+  micBtn.addEventListener("click", ()=>{ audio(); micOn ? unlisten() : listen(); });
+  callBtn.addEventListener("click", ()=>{ audio(); callOn = !callOn; syncButtons(); if(callOn) listen(); else unlisten(); });
+  muteBtn.addEventListener("click", ()=>{ soundOn = !soundOn; if(!soundOn) stopTalk(); syncButtons(); });
+  ccBtn.addEventListener("click", ()=>{ ccOn = !ccOn; syncButtons(); });
+  fsBtn.addEventListener("click", ()=>{
+    if(document.fullscreenElement){ document.exitFullscreen(); return; }
+    if(stage.requestFullscreen) stage.requestFullscreen().catch(()=>stage.classList.toggle("full"));
+    else stage.classList.toggle("full");
+  });
+  document.addEventListener("keydown", e=>{ if(e.key === "Escape") stage.classList.remove("full"); });
+  const startEl = $("#start");
+  function begin(withVoice){
+    started = true; startEl.hidden = true; audio();
+    const hello = GREETING;
+    if(withVoice && SR){ callOn = true; syncButtons(); }
+    voiceReply(hello);
+  }
+  $("#startVoice").addEventListener("click", ()=>begin(true));
+  $("#startText").addEventListener("click", ()=>{ started = true; startEl.hidden = true; audio(); inputEl.focus(); });
+  // the stage stays quiet until the first click: browsers do not let a page talk by itself
+  window.JARVIS_FACE = { get face(){ return face; }, voiceReply, listen, stopTalk };
+
+  function failFace(msg){ setState("idle"); if(face) face.mood("concerned"); captions.textContent = msg; setTimeout(()=>{ if(state === "idle" && face) face.mood("calm"); }, 4000); }
 
   /* ---------- boot ---------- */
   if(history.length){
