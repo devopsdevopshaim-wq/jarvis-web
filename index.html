@@ -337,6 +337,7 @@
 
   const DEFAULTS = {
     base: "https://haimkripisn.app.n8n.cloud",
+    cf: "https://spider-auth.devopsdevopshaim.workers.dev",   // no execution cap: asked first; n8n is the fallback
     id: "e92be7e4-3947-4cbf-830b-5f89627fbf4c",
     mode: "prod",
     v: 2
@@ -497,11 +498,13 @@
     unlisten(); stopTalk(); setState("thinking");
 
     try{
-      const res = await fetch(webhookUrl(), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "sendMessage", sessionId, chatInput: text, route: "" })
-      });
+      const body = JSON.stringify({ action: "sendMessage", sessionId, chatInput: text, route: "" });
+      let res = null;
+      try{
+        res = await fetch((cfg.cf || DEFAULTS.cf).replace(/\/+$/,"") + "/hasadna-jarvis", { method: "POST", headers: { "Content-Type": "application/json" }, body });
+        if(res.status >= 500 || res.status === 404) res = null;
+      }catch(e){ res = null; }
+      if(!res) res = await fetch(webhookUrl(), { method: "POST", headers: { "Content-Type": "application/json" }, body });
       hideTyping();
       if(!res.ok){
         let detail = "";
@@ -656,7 +659,7 @@
     natural = !!voice && /natural|online|neural/i.test(voice.name);
   }
   if(hasTTS){ pickVoice(); speechSynthesis.addEventListener("voiceschanged", pickVoice); }
-  function voiceUrl(){ return (cfg.base || DEFAULTS.base).replace(/\/+$/,"") + "/webhook/hasadna-voice"; }
+  function voiceUrl(){ return (cfg.cf || DEFAULTS.cf).replace(/\/+$/,"") + "/hasadna-voice"; }
   let cloudOK = true;
 
   // one shared audio graph: a clip from the server goes through an analyser, and the mouth follows the sound
